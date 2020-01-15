@@ -12,7 +12,7 @@ export default new Vuex.Store({
     'accounts': [],
     'settings': {
       'api_server': 'https://nuls.world',
-      'chain_id': 8964
+      'chain_id': 1 //8964
       // 'api_server': 'https://testnet.nuls.world/',
       // 'chain_id': 261
     },
@@ -33,11 +33,16 @@ export default new Vuex.Store({
 
       if (state.ledger !== null) {
         console.log(state.ledger)
+        let address_prefix = `NULSd`
+        if(state.settings.chain_id !== 1){
+          let address_prefix = `tNULSd`
+        }
+
         accounts.push({
           'name': `Ledger`,
           'private_key': null,
           'public_key': state.ledger.publicKey,
-          'address': state.ledger.address,
+          'address': address_prefix + state.ledger.address,
           'type': 'ledger'
         })
       }
