@@ -42,7 +42,8 @@ export default new Vuex.Store({
           'name': `Ledger`,
           'private_key': null,
           'public_key': state.ledger.publicKey,
-          'address': address_prefix + state.ledger.address,
+          //'address': address_prefix + state.ledger.address,
+          'address': state.ledger.address,
           'type': 'ledger'
         })
       }
