@@ -73,6 +73,7 @@
             <b-dropdown-header>{{$t('nav.configuredWallets')}}</b-dropdown-header>
             <b-dropdown-item v-for="account of this.accounts"
                         v-bind:to="'/account/' + account.address">
+              <router-link to="'/account/' + account.address"><button>acc</button></router-link>
               <b-row class="justify-content-between">
                 <b-col cols="6">
                   {{account.name}}
@@ -84,6 +85,7 @@
             </b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-header>{{$t('nav.actions')}}</b-dropdown-header>
+            <router-link  to="/add"><button>add</button></router-link>
             <b-dropdown-item to="/add">
               <PlusIcon/>
               {{$t('nav.addAccount')}}
@@ -118,11 +120,6 @@ export default {
       },
       'symbols': ['USD', 'EUR', 'CNY', 'BTC', 'ETH'],
       'chains': {
-        8964: {
-          'chain_name': 'NULS mainnet',
-          'api_server': 'https://nuls.world',
-          'chain_id': 8964
-        },
         1: {
           'chain_name': 'NULS mainnet',
           'api_server': 'https://nuls.world',
