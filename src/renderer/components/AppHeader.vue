@@ -73,7 +73,8 @@
             <b-dropdown-header>{{$t('nav.configuredWallets')}}</b-dropdown-header>
             <b-dropdown-item v-for="account of this.accounts"
                         v-bind:to="'/account/' + account.address">
-              <router-link to="'/account/' + account.address">{{$t('nav.configuredWallets')}}</router-link>
+              <router-link to="/account/NULSd6Hgb7ja7JEhy5uTpT4GASV1XsiiP9bLc"><button>ledger</button></router-link>
+              <router-link :to="{name:'Transfer', params:{address: account.address}}"><button>transfer</button></router-link>
               <b-row class="justify-content-between">
                 <b-col cols="6">
                   {{account.name}}
@@ -85,7 +86,7 @@
             </b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-header>{{$t('nav.actions')}}</b-dropdown-header>
-            <router-link  to="/add">{{$t('nav.addAccount')}}</router-link>
+            <router-link to="/add">{{$t('nav.addAccount')}}</router-link>
             <b-dropdown-item to="/add">
               <PlusIcon/>
               {{$t('nav.addAccount')}}

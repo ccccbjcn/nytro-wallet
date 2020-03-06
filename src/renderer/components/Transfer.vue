@@ -73,6 +73,7 @@ import { mapState } from 'vuex'
 
 export default {
   name: 'transfer',
+  props: ['address'],
   data () {
     return {
       'targetAddress': '',
@@ -174,11 +175,16 @@ export default {
       return true
     },
     async getOutputs () {
-      let response = await axios.get(`${this.settings.api_server}/addresses/outputs/${this.account.address}.json`)
-      this.$set(this, 'stats', response.data.unspent_info)
-      this.$set(this, 'outputs', response.data.outputs)
+      let address = this.$route.params.address
+      let response = await axios.get(`${this.settings.api_server}/addresses/stats`, {
+        params: {
+          addresses: [address]
+        }
+      })
+      let stats = response.data.unspent_info[address]
       this.$set(this, 'last_sync_height', response.data.last_height)
-      this.$set(this, 'total_outputs_value', response.data.total_available)
+      this.$set(this, 'total_outputs_value', stats.available_value)
+      this.$set(this, 'stats', stats)
     },
     broadcasted (msg) {
       Object.assign(this.$data, this.$options.data())
