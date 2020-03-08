@@ -88,7 +88,6 @@ new Vue({
         }
       },
       async get_ledger_account(show_on_ledger) {
-        console.log("requesting account");
         let account = null
         if (!process.env.IS_WEB) {
           account = await ipcpRenderer.sendMain('ledger_get_accounts', store.state.settings.chain_id, show_on_ledger)

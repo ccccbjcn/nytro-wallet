@@ -55,8 +55,11 @@
       </b-input-group>
     </b-form-group>
 
-    <sign :tx="tx" :account="account" :api_server="settings.api_server" @message-broadcasted="broadcasted" />
-
+    <!--sign :tx="tx" :account="account" :api_server="settings.api_server" @message-broadcasted="broadcasted" /-->
+    <b-button class="btn btn-lg btn-block btn-primary mb-3" type="button" v-on:click="sign" :disabled="tx==null">
+      {{$t('actions.sign_transaction')}}
+    </b-button>
+    <!--b-button @click="sign">sign</b-button-->
   </form>
 </template>
 <script>
@@ -67,9 +70,18 @@ import {private_key_to_public_key,
   public_key_to_hash,
   get_outputs_for_sum
 } from 'nulsworldjs/src/model/data.js'
+import nuls from 'nuls-sdk-js/src/index.js'
+import util from 'nuls-sdk-js/src/test/api/util.js'
+import http from 'nuls-sdk-js/src/test/api/https.js'
+
 import Transaction from 'nulsworldjs/src/model/transaction.js'
 import Sign from './Sign.vue'
 import { mapState } from 'vuex'
+
+let ipcpRenderer = null
+if (!process.env.IS_WEB) {
+  ipcpRenderer = require('electron-ipcp').ipcpRenderer
+}
 
 export default {
   name: 'transfer',
@@ -89,9 +101,9 @@ export default {
   },
   computed: {
     addressState () {
-      if (this.targetAddress.length != 32) { return false }
-      // if (!this.targetAddress.startsWith("Ns"))
-      //  return false;
+      //if (this.targetAddress.length != 32) { return false }
+      //return true
+      if (!this.targetAddress.startsWith("NULSd")) { return false }          
       return true
     },
     invalidAddressFeedback () {
@@ -133,12 +145,13 @@ export default {
     ])
   },
   methods: {
-    prepareTx () {
+    /* prepareTx () {
       if (!(this.amountState && this.addressState)) {
         this.tx = null
         return
       }
       this.signed_tx = null
+      console.info('prepare1')
 
       let target_value = this.amount * 100000000
       let {in: selected_inputs,
@@ -149,7 +162,7 @@ export default {
           'outputs': [
             {address: hash_from_address(this.targetAddress),
               value: target_value},
-            {address: hash_from_address(this.account.address),
+            {address: hash_from_address(this.$route.params.address),
               value: current_value - target_value} // no fee applied yet
           ],
           'type': 2,
@@ -169,6 +182,59 @@ export default {
         tx.outputs.splice(1, 1)
       }
       this.tx = tx
+    }, */
+    async prepareTx () {      
+      let fromAddress = this.$route.params.address 
+      let balanceInfo = await http.postComplete('https://public1.nuls.io/', 'getAccountBalance', [1, 1, 1, fromAddress])
+        .then((response) => {
+          return {'balance': response.result.balance, 'nonce': response.result.nonce};
+        })
+        .catch((error) => {
+          return {success: false, data: error};
+        });
+
+      let transferInfo = {
+        fromAddress: fromAddress,
+        toAddress: this.targetAddress,
+        assetsChainId: 1,
+        assetsId: 1,
+        amount: this.amount * 100000000,
+        fee: 100000
+      };
+
+      let inOrOutputs = await util.inputsOrOutputs(transferInfo, balanceInfo, 2);
+      let tAssemble = [];
+      //console.info(inOrOutputs.data)
+      if (inOrOutputs.success) {
+        tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, this.remark, 2);
+        //console.info(tAssemble)
+        let newFee = util.countFee(tAssemble, 1);
+        if (transferInfo.fee !== newFee) {
+          transferInfo.fee = newFee;
+          inOrOutputs = await util.inputsOrOutputs(transferInfo, balanceInfo, 2);
+          tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, this.remark, 2);
+          //console.info(tAssemble)
+        } 
+      } else {
+        console.info(inOrOutputs.data)
+      }
+      this.tx = tAssemble
+    },
+    async sign () {
+      /*if (this.account.type === 'ledger') {
+
+      } */
+      let hex = this.tx.txSerialize().toString('hex')
+      let scriptSig = null
+      if (!process.env.IS_WEB) {
+        scriptSig = await ipcpRenderer.sendMain(
+          'ledger_get_scriptsig', 1, hex)
+        console.info(scriptSig)
+      } else {
+        const {ledger_get_scriptsig} = require('../ledger_browser')
+        scriptSig = await ledger_get_scriptsig(1, hex)
+
+      }
     },
     paste () {
       this.prepareTx()
@@ -176,11 +242,13 @@ export default {
     },
     async getOutputs () {
       let address = this.$route.params.address
+      //https://nuls.world/addresses/stats?addresses[]=NULSd6Hgb7ja7JEhy5uTpT4GASV1XsiiP9bLc
       let response = await axios.get(`${this.settings.api_server}/addresses/stats`, {
         params: {
           addresses: [address]
         }
       })
+      //console.info(response)
       let stats = response.data.unspent_info[address]
       this.$set(this, 'last_sync_height', response.data.last_height)
       this.$set(this, 'total_outputs_value', stats.available_value)
