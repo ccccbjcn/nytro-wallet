@@ -18,15 +18,13 @@ export async function get_account(transport, chain_id, show_on_ledger) {
 }
 
 export async function get_scriptsig(transport, chain_id, tx_ser) {
-  console.log(tx_ser.byteLength)
   let commhandler = new NulsCommHandler(transport)
   let ledger = new NulsLedger(commhandler)
   let account = get_ledger_account(chain_id)
   const acct = await ledger.getPubKey(account)
   const signature = await ledger.signTx(account, account, tx_ser)
-  console.log(signature)
   let pub_key = Buffer.from(acct.publicKey, 'hex')
-  console.log(pub_key)
+  console.info(acct.publicKey)
   let buf = Buffer.alloc(3 + pub_key.length + signature.length)
   let cursor = write_with_length(pub_key, buf, 0)
   cursor += 1 // we let a zero there for alg ECC type

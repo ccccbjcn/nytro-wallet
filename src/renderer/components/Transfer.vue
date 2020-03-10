@@ -204,16 +204,13 @@ export default {
 
       let inOrOutputs = await util.inputsOrOutputs(transferInfo, balanceInfo, 2);
       let tAssemble = [];
-      //console.info(inOrOutputs.data)
       if (inOrOutputs.success) {
         tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, this.remark, 2);
-        //console.info(tAssemble)
         let newFee = util.countFee(tAssemble, 1);
         if (transferInfo.fee !== newFee) {
           transferInfo.fee = newFee;
           inOrOutputs = await util.inputsOrOutputs(transferInfo, balanceInfo, 2);
           tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, this.remark, 2);
-          //console.info(tAssemble)
         } 
       } else {
         console.info(inOrOutputs.data)
@@ -224,16 +221,14 @@ export default {
       /*if (this.account.type === 'ledger') {
 
       } */
-      let hex = this.tx.txSerialize().toString('hex')
+      let hex = this.tx.serializeForHash().toString('hex')
       let scriptSig = null
       if (!process.env.IS_WEB) {
-        scriptSig = await ipcpRenderer.sendMain(
-          'ledger_get_scriptsig', 1, hex)
+        scriptSig = await ipcpRenderer.sendMain('ledger_get_scriptsig', 1, hex)
         console.info(scriptSig)
       } else {
         const {ledger_get_scriptsig} = require('../ledger_browser')
         scriptSig = await ledger_get_scriptsig(1, hex)
-
       }
     },
     paste () {
@@ -248,7 +243,6 @@ export default {
           addresses: [address]
         }
       })
-      //console.info(response)
       let stats = response.data.unspent_info[address]
       this.$set(this, 'last_sync_height', response.data.last_height)
       this.$set(this, 'total_outputs_value', stats.available_value)

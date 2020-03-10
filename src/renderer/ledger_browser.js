@@ -10,9 +10,7 @@ export async function ledger_get_accounts(chain_id, show_on_ledger) {
   else
     transport = await Transport.create()
   last_transport = transport;
-  console.log(transport)
   let account = null
-  console.log('Transport created')
   try {
     chain_id = chain_id ? chain_id : 261
     account = await get_account(transport, chain_id, show_on_ledger)
@@ -36,7 +34,6 @@ export async function ledger_get_scriptsig (chain_id, tx_hex) {
     chain_id = chain_id ? chain_id : 261
     let tx_ser = Buffer.from(tx_hex, 'hex')
     let scriptSig = await get_scriptsig(transport, chain_id, tx_ser)
-    console.log(scriptSig.toString('hex'))
     response = scriptSig.toString('hex')
   }
   catch (e) {

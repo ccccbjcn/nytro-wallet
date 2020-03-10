@@ -83,7 +83,6 @@ new Vue({
       async update_ledger() {
         if (store.state.ledger === null) {
           const account = await this.get_ledger_account()
-          console.log(account)
           store.commit('set_ledger', account)
         }
       },
