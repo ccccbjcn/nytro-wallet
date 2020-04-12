@@ -225,7 +225,7 @@ export default {
       let scriptSig = null
       if (!process.env.IS_WEB) {
         scriptSig = await ipcpRenderer.sendMain('ledger_get_scriptsig', 1, hex)
-        console.info(scriptSig)
+        console.log(scriptSig)
       } else {
         const {ledger_get_scriptsig} = require('../ledger_browser')
         scriptSig = await ledger_get_scriptsig(1, hex)
